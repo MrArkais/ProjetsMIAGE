@@ -10,6 +10,8 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 public class TCPThread extends Thread {
 	private Socket connectionSocket ;
@@ -18,7 +20,7 @@ public class TCPThread extends Thread {
 	final PrintWriter out;  
 	boolean isloggedin; 
 	TCPThread tcpth = null;
-	
+	ArrayList<String> historique = new ArrayList<String> ();
 	
 	
 	public TCPThread(Socket connectionSocket, String name, BufferedReader in, PrintWriter out) {
@@ -84,35 +86,56 @@ public class TCPThread extends Thread {
 						
 						
 			
-						request = in.readLine();
-			while (!request.contains("/logout"))
+						// request = in.readLine();
+			do 
 			{
 			
 				//out.println("");
 				request = in.readLine();
+				historique.add(request);
 				
 				if (request.contains("/liste"))
 				{
-					TCPServerSocket.liste(this);
-
+					for (TCPThread tcpth : TCPServerSocket.vector)
+					{
+						out.println(tcpth.getUtilisateur());
+					}
 				}
 				
+				else if (request.contains("/historique"))
+				{
+					out.println("Historique des messages :");
+					for (String msg : historique)
+					{
+						out.println(msg);
+					}
+				}
 				else if (tcpth == null)
 				{
 					String utilisateur = request;
 					for (TCPThread tcpth : TCPServerSocket.vector)
 					{
-						if (tcpth.utilisateur.equals(utilisateur) && tcpth.utilisateur!=this.utilisateur)
+						System.out.println("requete envoyée " +request);
+						// break the string into message and recipient part 
+						StringTokenizer st = new StringTokenizer(request, ":"); 
+						String date = st.nextToken(); 
+						String recipient = st.nextToken(); 
+						
+						System.out.println("recipient " +recipient);
+
+						if (tcpth.utilisateur.equals(recipient))
 						{
-							TCPServerSocket.miseenr(this, tcpth);
-							tcpth.stop();
-							tcpth.setTcpth(this);
-							tcpth.start();
+							//TCPServerSocket.miseenr(this, tcpth);
+							while (true)
+							{
+								request = in.readLine();
+								tcpth.out.println(this.utilisateur+" : " +request);
+							}
 						}
 						
 						else if (tcpth.utilisateur.equals(this.utilisateur))
 						{
-							this.out.println(" ");
+							this.out.println("Connexion Impossible");
 						}
 
 					}
@@ -120,13 +143,12 @@ public class TCPThread extends Thread {
 				
 				else 
 				{
-					System.out.println("squalalal");
-					TCPServerSocket.miseenr(this, tcpth);
+					
 				}
 			
 				
 				
-			}
+			} while (!request.contains("/logout"));
 			
 						
 			
@@ -164,6 +186,3 @@ public class TCPThread extends Thread {
 }
 	
 	
-
-
-
