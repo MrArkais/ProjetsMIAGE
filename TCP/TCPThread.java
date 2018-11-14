@@ -17,7 +17,7 @@ public class TCPThread extends Thread {
 	final BufferedReader in; 
 	final PrintWriter out;  
 	boolean isloggedin; 
-	
+	TCPThread tcpth = null;
 	
 	
 	
@@ -33,6 +33,7 @@ public class TCPThread extends Thread {
 
 
 
+
 	public String getUtilisateur() {
 		return utilisateur;
 	}
@@ -40,9 +41,10 @@ public class TCPThread extends Thread {
 
 
 
-	public void run()
+	public synchronized void run()
 	{
 		String request ;
+		
 		
 		try {
 	// Création du flux en entrée attache a la socket
@@ -79,6 +81,8 @@ public class TCPThread extends Thread {
 //			
 //		
 //					} while (!request.contains("STOP"));
+						
+						
 			
 						request = in.readLine();
 			while (!request.contains("/logout"))
@@ -89,38 +93,35 @@ public class TCPThread extends Thread {
 				
 				if (request.contains("/liste"))
 				{
-					for (TCPThread cp : TCPServerSocket.vector)
-					{
-						out.print("["+cp.getUtilisateur()+"] ");
-					}
-				
+					TCPServerSocket.liste(this);
 
 				}
 				
-				else
+				else if (tcpth == null)
 				{
 					String utilisateur = request;
-					
 					for (TCPThread tcpth : TCPServerSocket.vector)
 					{
 						if (tcpth.utilisateur.equals(utilisateur) && tcpth.utilisateur!=this.utilisateur)
 						{
-							tcpth.out.println(this.utilisateur+" souhaite se connecter avec toi !");
-
-							while(true)
-							{
-								request = in.readLine();
-								tcpth.out.println(utilisateur+" : "+request);
-							}
-							
+							TCPServerSocket.miseenr(this, tcpth);
+							tcpth.stop();
+							tcpth.setTcpth(this);
+							tcpth.start();
 						}
 						
 						else if (tcpth.utilisateur.equals(this.utilisateur))
 						{
-							this.out.println("(Impossible de se connecter avec ce dernier utilisateur)");
+							this.out.println(" ");
 						}
 
 					}
+				}
+				
+				else 
+				{
+					System.out.println("squalalal");
+					TCPServerSocket.miseenr(this, tcpth);
 				}
 			
 				
@@ -137,6 +138,9 @@ public class TCPThread extends Thread {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	
+		
+	
 		
 		try {
 			connectionSocket.close();
@@ -144,9 +148,22 @@ public class TCPThread extends Thread {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	} 
+		
+		
+		
+		
+	}
 
-	
+
+
+
+
+	public void setTcpth(TCPThread tcpth) {
+		this.tcpth = tcpth;
+	} 
 }
+	
+	
+
 
 

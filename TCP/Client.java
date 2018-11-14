@@ -72,11 +72,11 @@ public class Client  {
 			Thread sendMessage = new Thread(new Runnable() 
 			{ 
 				@Override
-				public void run() { 
+				public synchronized void run() { 
 					while (true) { 
 
 						// read the message to deliver. 
-						System.out.println("Veuillez rentrer /liste pour afficher la liste des utilisateurs, ou taper le nom de l'utilisateur avec lequel vous souhaitez communiquer : ");
+						//System.out.println("Veuillez rentrer /liste pour afficher la liste des utilisateurs, ou taper le nom de l'utilisateur avec lequel vous souhaitez communiquer : ");
 						outToServer.println(""); 
 
 						try {
@@ -98,7 +98,7 @@ public class Client  {
 			Thread readMessage = new Thread(new Runnable() 
 			{ 
 				@Override
-				public void run() { 
+				public synchronized void run() { 
 
 					while (true) { 
 						try { 
