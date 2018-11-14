@@ -52,11 +52,40 @@ class TCPServerSocket {
 						// start the thread. 
 						t.start(); 
 						
+						
 	
 			
 		
 		} // boucle et attend la connexion d'un nouveau client
-
+		
+		
 	}
+	
+	public static void liste (TCPThread thr)
+	{
+		for (TCPThread cp : TCPServerSocket.vector)
+		{
+			thr.out.print("["+cp.getUtilisateur()+"] ");
+		}
+	
+	}
+	
+	public static void miseenr (TCPThread thr1 , TCPThread thr2) throws IOException
+	{
+		String request;
+		while (true)
+		{
+			
+			request = thr1.in.readLine();
+			thr2.out.println(thr1.getUtilisateur()+" : "+request);
+			
+			
+		}
+	}
+	
+
+
+
 
 }
+
