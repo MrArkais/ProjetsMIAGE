@@ -7,6 +7,9 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.Thread;
 import java.net.Socket;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Scanner;
 
 public class Client  {
@@ -18,7 +21,8 @@ public class Client  {
 		String request = "";
 		String answer = "test";
 		String as;
-	
+		DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+		Date date = new Date();
 
 		
 		try  {
@@ -67,6 +71,7 @@ public class Client  {
 //			
 //			}
 //			
+			System.out.println("Veuillez rentrer /liste pour afficher la liste des utilisateurs, ou taper le nom de l'utilisateur avec lequel vous souhaitez communiquer : ");
 
 			// sendMessage thread 
 			Thread sendMessage = new Thread(new Runnable() 
@@ -76,14 +81,13 @@ public class Client  {
 					while (true) { 
 
 						// read the message to deliver. 
-						//System.out.println("Veuillez rentrer /liste pour afficher la liste des utilisateurs, ou taper le nom de l'utilisateur avec lequel vous souhaitez communiquer : ");
-						outToServer.println(""); 
+						//outToServer.println("123"); 
 
 						try {
 							String request;
 							request = inFromUser.readLine();
 							// Emission des données au serveur
-							outToServer.println(request); 
+							outToServer.println(dateFormat.format(date)+ " : "+request); 
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -106,11 +110,12 @@ public class Client  {
 							// Lecture des données arrivant du serveur
 							String answer = inFromServer.readLine();
 							
-							if(answer!=" " || answer!= null || !answer.isEmpty())
+							if(!answer.equals("") || !answer.equals(null) )
 							{
 								System.out.println(answer);
-
 							}
+							
+							
 							
 						} catch (IOException e) { 
 

@@ -6,7 +6,7 @@ import java.util.Vector;
 
 class TCPServerSocket {
 	static Vector<TCPThread> vector = new Vector<>();
-	
+	static Vector<TCPThread> sl = new Vector<>();
 	
 
 	public static void main(String argv[]) throws Exception {
@@ -61,31 +61,33 @@ class TCPServerSocket {
 		
 	}
 	
-	public static void liste (TCPThread thr)
-	{
-		for (TCPThread cp : TCPServerSocket.vector)
-		{
-			thr.out.print("["+cp.getUtilisateur()+"] ");
-		}
+//	public static void liste (TCPThread thr)
+//	{
+//		thr.out.println("Liste utilisateurs : ");
+//		for (TCPThread cp : vector)
+//		{
+//			thr.out.print("["+cp.getUtilisateur()+"] ");
+//		}
+//	
+//	}
 	
+//	public static void miseenr (TCPThread thr1 , TCPThread thr2) throws IOException
+//	{
+//		String request = "";
+//
+//		while (!request.contains("/logout"))
+//		{
+//			
+//			request = thr1.in.readLine();
+//			if (request.equals(" ") || !request.equals(null))
+//			{
+//				thr2.out.println(thr1.getUtilisateur()+" : "+request);
+//			}
+//			
+//			
+//			
+//		}
+		
 	}
 	
-	public static void miseenr (TCPThread thr1 , TCPThread thr2) throws IOException
-	{
-		String request;
-		while (true)
-		{
-			
-			request = thr1.in.readLine();
-			thr2.out.println(thr1.getUtilisateur()+" : "+request);
-			
-			
-		}
-	}
-	
-
-
-
-
-}
 
