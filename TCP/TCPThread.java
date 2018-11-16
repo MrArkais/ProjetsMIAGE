@@ -1,17 +1,21 @@
 package TCP;
 import java.io.BufferedReader;
+
 import java.io.BufferedWriter;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.net.InetAddress;
 import java.net.Socket;
-import java.net.SocketAddress;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.StringTokenizer;
+import java.util.Date;
+
+/* Pour ce programme thread , au vu de l'architecture (je me suis rendu compte que il aurait mieux valu
+ *  travailler avec un objet client) , 
+ * j'ai été obligé de transmettre des commandes 
+ * selon certaines conditions aux clients pour 
+permettre de modifier le comportement des autres threads*/
 
 public class TCPThread extends Thread {
 	private Socket connectionSocket ;
@@ -21,8 +25,8 @@ public class TCPThread extends Thread {
 	boolean isloggedin; 
 	TCPThread tcpth = null;
 	ArrayList<String> historique = new ArrayList<String> ();
-	
-	
+
+
 	public TCPThread(Socket connectionSocket, String name, BufferedReader in, PrintWriter out) {
 		super();
 		this.connectionSocket = connectionSocket;
@@ -33,147 +37,190 @@ public class TCPThread extends Thread {
 	}
 
 
-
-
-
 	public String getUtilisateur() {
 		return utilisateur;
 	}
 
 
-
-
 	public synchronized void run()
 	{
-		String request ;
-		
-		
+		String request;
 		try {
-	// Création du flux en entrée attache a la socket
-				BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-	// Création du flux en sortie attache a la socket
-					PrintWriter outToClient;
-					
-						outToClient = new PrintWriter(
-							new BufferedWriter(new OutputStreamWriter(connectionSocket.getOutputStream())), true);
-			
-		// Lecture des données arrivant du client
-//					do {
-//						
-//						
-//						request = in.readLine();
-//
-//					
-//
-//							// Récuperer IP Client
-//							SocketAddress IP = connectionSocket.getLocalSocketAddress();
-//							// Emission des données au client
-//							System.out.println(IP + " - " + request.toUpperCase());
-//							out.println(request.toUpperCase());
-//					
-//							if (request.contains("/liste"))
-//							{
-//								for (TCPThread cp : TCPServerSocket.vector)
-//								{
-//									out.print(cp.getUtilisateur());
-//								}
-//							}
-//							
-//					
-//			
-//		
-//					} while (!request.contains("STOP"));
-						
-						
-			
-						// request = in.readLine();
+			// Création du flux en entrée attache a la socket
+			BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+			// Création du flux en sortie attache a la socket
+			PrintWriter outToClient;
+
+			outToClient = new PrintWriter(new BufferedWriter(new OutputStreamWriter(connectionSocket.getOutputStream())), true);
+			// request = in.readLine();
 			do 
 			{
-			
-				//out.println("");
-				request = in.readLine();
-				historique.add(request);
-				
-				if (request.contains("/liste"))
-				{
-					for (TCPThread tcpth : TCPServerSocket.vector)
+				request = "";
+				try {
+					request = in.readLine();
+					//out.println("");
+					Date maDate = new Date();
+					String dateEnvoie = maDate.toString(); //LocalDateTime.now().toString();
+					historique.add(dateEnvoie +" : "+request);
+					out.println(dateEnvoie +" MOI : "+request);
+
+					if (request.startsWith("/cmd"))
 					{
-						out.println(tcpth.getUtilisateur());
+						out.println(" /liste : affiche les utilisateurs connecté");
+						out.println(" /historique : affiche tous vos messages envoyés");
+						out.println(" /join utilisateur : vous connecte à un utilisateur");
+						out.println(" /quit : quitte l'application ");
+						out.println(" /logout : quitte le channel privé");
 					}
-				}
-				
-				else if (request.contains("/historique"))
-				{
-					out.println("Historique des messages :");
-					for (String msg : historique)
+					else if (request.startsWith("/liste"))
 					{
-						out.println(msg);
+						//Foreach de parcours du vecteur stockant mes clients (autres threads)
+						for (TCPThread tcpth : TCPServerSocket.vector)
+						{
+							out.println(tcpth.getUtilisateur());
+						}
 					}
-				}
-				else if (tcpth == null)
-				{
-					String utilisateur = request;
-					for (TCPThread tcpth : TCPServerSocket.vector)
+					else if (request.startsWith("/historique"))
+					{
+						out.println("Historique des messages :");
+						for (String msg : historique)
+						{
+							out.println(msg);
+						}
+					}
+					else if (tcpth == null && request.startsWith("/join"))
 					{
 						System.out.println("requete envoyée " +request);
-						// break the string into message and recipient part 
-						StringTokenizer st = new StringTokenizer(request, ":"); 
-						String date = st.nextToken(); 
-						String recipient = st.nextToken(); 
+						String date = LocalDateTime.now().toString();
+						String utilisateurCible = request.substring(6);
+						System.out.println("Connexion de "+ this.utilisateur +" vers "+utilisateurCible);
+						boolean utilisateurTrouve = false;
 						
-						System.out.println("recipient " +recipient);
-
-						if (tcpth.utilisateur.equals(recipient))
+						for (TCPThread tcpth : TCPServerSocket.vector)
 						{
-							//TCPServerSocket.miseenr(this, tcpth);
-							while (true)
+							if (tcpth.utilisateur.equals(utilisateurCible))
 							{
-								request = in.readLine();
-								tcpth.out.println(this.utilisateur+" : " +request);
+								utilisateurTrouve = true;
+								
+								//Si deja en conv avec qqun d'autre
+								if(TCPServerSocket.map.containsValue(tcpth.utilisateur))
+								{
+									 if(!TCPServerSocket.map.get(tcpth.utilisateur).equals(this.utilisateur)) {
+										//occupé
+										out.println("Votre correspondant n'est pas disponible pour le moment.");
+									 }else {
+										out.println("Vous êtes déjà connecté avec "+tcpth.utilisateur);
+									 }
+								}
+								else if(!TCPServerSocket.map.containsValue(tcpth.utilisateur))
+								{
+									//si pas en conv avec moi meme
+									//Ajout dans mon dictionnaire (pour salon privé) de moi et mon thread partenaire
+									TCPServerSocket.map.put(tcpth.utilisateur, this.utilisateur);
+									TCPServerSocket.map.put(this.utilisateur, tcpth.utilisateur);
+									//Pour "forcer" le partenaire à se connecter
+									tcpth.out.println("/connectTo "+this.utilisateur);
+									this.out.println("Connecté avec "+tcpth.utilisateur);
+								}
+								else 
+								{
+									this.out.println("Un problème est survenu !");
+								}
 							}
 						}
-						
-						else if (tcpth.utilisateur.equals(this.utilisateur))
+						if(!utilisateurTrouve) {
+							this.out.println("Aucun utilisateur de ce nom ! /liste pour obtenir les utilisateurs connectés.");
+						}
+					}
+					else if(request.startsWith("/logout"))
+					{
+						//Fonction pour quitter la conversation privée 
+						if(TCPServerSocket.map.containsValue(this.utilisateur)) {
+							this.out.println("Déconnecté de "+TCPServerSocket.map.get(this.utilisateur));
+							for (TCPThread tcpth : TCPServerSocket.vector)
+							{
+								if(tcpth.utilisateur.equals(TCPServerSocket.map.get(this.utilisateur)))
+								{
+									tcpth.out.println("/logoutTo "+this.utilisateur);
+									break;
+								}
+							}
+							TCPServerSocket.map.remove(TCPServerSocket.map.get(this.utilisateur));
+							TCPServerSocket.map.remove(this.utilisateur);
+						}else {
+							this.out.println("Vous n'avez aucune connexion privée pour le moment");
+						}
+					}
+					else if(request.startsWith("/quit"))
+					{
+						if(TCPServerSocket.map.containsValue(this.utilisateur)) {
+							this.out.println("Déconnecté de "+TCPServerSocket.map.get(this.utilisateur));
+							for (TCPThread tcpth : TCPServerSocket.vector)
+							{
+								if(tcpth.utilisateur.equals(TCPServerSocket.map.get(this.utilisateur)))
+								{
+									tcpth.out.println("/logoutTo "+this.utilisateur);
+									break;
+								}
+							}
+							TCPServerSocket.map.remove(TCPServerSocket.map.get(this.utilisateur));
+							TCPServerSocket.map.remove(this.utilisateur);
+						}
+						for (TCPThread tcpth : TCPServerSocket.vector)
 						{
-							this.out.println("Connexion Impossible");
+							tcpth.out.println("/hasLeave "+this.utilisateur);
+						}
+						// Couper les liaisons Thread et TCP
+						TCPThread toDelete = null;
+						for (TCPThread tcpth : TCPServerSocket.vector)
+						{
+							if(tcpth.utilisateur.equals(this.utilisateur))
+								toDelete = tcpth;
+						}
+						TCPServerSocket.vector.remove(toDelete);
+						break;
+					}
+					else 
+					{
+						//discution
+						//Si tu parle avec une personne 
+						if(TCPServerSocket.map.containsValue(this.utilisateur)) {
+							for (TCPThread tcpth : TCPServerSocket.vector)
+							{
+								if(tcpth.utilisateur.equals(TCPServerSocket.map.get(this.utilisateur)))
+								{
+									tcpth.out.println(dateEnvoie +" [PRIVE] "+this.utilisateur+" : " +request);
+								}
+							}
+						}else {
+							//Avec tous le monde
+							for (TCPThread tcpth : TCPServerSocket.vector)
+							{
+								if(!tcpth.utilisateur.equals(this.utilisateur))
+								{
+									tcpth.out.println(dateEnvoie +" [PUBLIC] "+this.utilisateur+" : " +request);
+								}
+							}
 						}
 
 					}
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-				
-				else 
-				{
-					
-				}
-			
-				
-				
-			} while (!request.contains("/logout"));
-			
-						
-			
-				
+			}while (true);
 
-			
-				
-		} catch (IOException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	
-		
-	
-		
+
 		try {
 			connectionSocket.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
-		
-		
 	}
 
 
@@ -184,5 +231,4 @@ public class TCPThread extends Thread {
 		this.tcpth = tcpth;
 	} 
 }
-	
-	
+

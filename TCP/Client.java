@@ -9,6 +9,7 @@ import java.lang.Thread;
 import java.net.Socket;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Scanner;
 
@@ -39,39 +40,18 @@ public class Client  {
 			
 			
 			// Création du flux en sortie
-			PrintWriter outToServer = new PrintWriter(
-			new BufferedWriter(
-			new OutputStreamWriter(
-			clientSocket.getOutputStream())),
-			true);
+			PrintWriter outToServer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream())),true);
 			
 			
 			//Création du flux en entrée
 			
-			BufferedReader inFromServer = new BufferedReader(
-			new InputStreamReader(
-			clientSocket.getInputStream()));
+			BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 			
 			System.out.println("Rentrez votre nom :");
 			String nom = sc.nextLine();
 			outToServer.println(nom);
-			
-//			while (!request.contains("STOP"))
-//			{
-//				System.out.println("Veuillez rentrer /liste pour afficher la liste des utilisateurs ");
-//				request = inFromUser.readLine();
-//
-//				
-//			// Emission des données au serveur
-//			outToServer.println(request);
-//			
-//			// Lecture des données arrivant du serveur
-//			answer = inFromServer.readLine();
-//			System.out.println("FROM SERVER: " + answer);
-//			
-//			}
-//			
-			System.out.println("Veuillez rentrer /liste pour afficher la liste des utilisateurs, ou taper le nom de l'utilisateur avec lequel vous souhaitez communiquer : ");
+	
+			System.out.println("Veuillez rentrer /cmd pour obtenir la liste des commandes ");
 
 			// sendMessage thread 
 			Thread sendMessage = new Thread(new Runnable() 
@@ -79,21 +59,15 @@ public class Client  {
 				@Override
 				public synchronized void run() { 
 					while (true) { 
-
-						// read the message to deliver. 
-						//outToServer.println("123"); 
-
 						try {
 							String request;
 							request = inFromUser.readLine();
 							// Emission des données au serveur
-							outToServer.println(dateFormat.format(date)+ " : "+request); 
+							outToServer.println(request); 
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-						
-						
 					} 
 				} 
 			}); 
@@ -109,25 +83,42 @@ public class Client  {
 							// read the message sent to this client 
 							// Lecture des données arrivant du serveur
 							String answer = inFromServer.readLine();
-							
-							if(!answer.equals("") || !answer.equals(null) )
+							if((!answer.equals("") || !answer.equals(null)) && answer.startsWith("/quit"))
 							{
+								break;
+							}
+							if((!answer.equals("") || !answer.equals(null)) && answer.startsWith("/join") )
+							{
+								outToServer.println("/join "+ answer.substring(6));
+							}
+							else if((!answer.equals("") || !answer.equals(null)) && answer.startsWith("/connectTo") )
+							{
+								System.out.println("Connecté avec "+answer.substring(11));
+							}
+							else if((!answer.equals("") || !answer.equals(null)) && answer.startsWith("/logoutTo") )
+							{
+								System.out.println("Deconnecté de "+answer.substring(10));
+							}
+							else if((!answer.equals("") || !answer.equals(null)) && answer.startsWith("/hasLeave") )
+							{
+								System.out.println(answer.substring(10) + " a quitté le serveur !");
+								return ;
+							}
+							else if(!answer.equals("") || !answer.equals(null) )
+							{
+								String dateReception = LocalDateTime.now().toString();
 								System.out.println(answer);
 							}
-							
-							
-							
 						} catch (IOException e) { 
-
+							System.out.println("Erreur client :");
 							e.printStackTrace(); 
 						} 
 					} 
-				} 
+				}
+				//Quitter le programme et fermer tous les threads de l'utilisateurs
 			}); 
-
 			sendMessage.start(); 
 			readMessage.start(); 
-				
 		}
 		
 	     catch(IOException e){
