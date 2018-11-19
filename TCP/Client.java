@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
 
@@ -19,19 +20,18 @@ public class Client  {
 	
 	public static void main(String argv[]) throws Exception 
 	{
-		String request = "";
-		String answer = "test";
 		String as;
 		DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		Date date = new Date();
+		ArrayList<String> historique = new ArrayList<String> ();
 
 		
 		try  {
 			
 			Scanner sc = new Scanner(System.in);
 			
-			//System.out.println("Rentrer l'adresse du serveur avec lequel vous souhaitez communiquer : ");
-			as = "localhost" ;//sc.nextLine();
+			System.out.println("Rentrer l'adresse du serveur avec lequel vous souhaitez communiquer : ");
+			as = /*"localhost"*/ sc.nextLine();
 			
 			BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
 			 //Création de la socket client, demande de connexion
@@ -62,6 +62,14 @@ public class Client  {
 						try {
 							String request;
 							request = inFromUser.readLine();
+							if(request.startsWith("/historique"))
+							{
+								System.out.println("Historique des messages reçus:");
+								for (String message : historique)
+								{
+									System.out.println("----- "+message+" -----");
+								}
+							}
 							// Emission des données au serveur
 							outToServer.println(request); 
 						} catch (IOException e) {
@@ -90,6 +98,7 @@ public class Client  {
 							if((!answer.equals("") || !answer.equals(null)) && answer.startsWith("/join") )
 							{
 								outToServer.println("/join "+ answer.substring(6));
+							
 							}
 							else if((!answer.equals("") || !answer.equals(null)) && answer.startsWith("/connectTo") )
 							{
@@ -108,6 +117,8 @@ public class Client  {
 							{
 								String dateReception = LocalDateTime.now().toString();
 								System.out.println(answer);
+								historique.add(answer);
+
 							}
 						} catch (IOException e) { 
 							System.out.println("Erreur client :");

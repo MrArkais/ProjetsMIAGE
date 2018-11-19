@@ -8,7 +8,6 @@ import java.util.Vector;
 
 class TCPServerSocket {
 	static Vector<TCPThread> vector = new Vector<>();
-	static Vector<TCPThread> sl = new Vector<>();
 	static Map<String, String> map = new HashMap<String, String>();
 
 	public static void main(String argv[]) throws Exception {

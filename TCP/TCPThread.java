@@ -7,9 +7,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.text.DateFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 /* Pour ce programme thread , au vu de l'architecture (je me suis rendu compte que il aurait mieux valu
  *  travailler avec un objet client) , 
@@ -22,8 +25,7 @@ public class TCPThread extends Thread {
 	private String utilisateur; 
 	final BufferedReader in; 
 	final PrintWriter out;  
-	boolean isloggedin; 
-	TCPThread tcpth = null;
+	boolean isloggedin = true; 
 	ArrayList<String> historique = new ArrayList<String> ();
 
 
@@ -40,10 +42,15 @@ public class TCPThread extends Thread {
 	public String getUtilisateur() {
 		return utilisateur;
 	}
+	
 
 
 	public synchronized void run()
 	{
+		while (isloggedin)
+		{
+			
+		
 		String request;
 		try {
 			// Création du flux en entrée attache a la socket
@@ -52,25 +59,25 @@ public class TCPThread extends Thread {
 			PrintWriter outToClient;
 
 			outToClient = new PrintWriter(new BufferedWriter(new OutputStreamWriter(connectionSocket.getOutputStream())), true);
-			// request = in.readLine();
 			do 
 			{
 				request = "";
 				try {
 					request = in.readLine();
-					//out.println("");
-					Date maDate = new Date();
-					String dateEnvoie = maDate.toString(); //LocalDateTime.now().toString();
+					Date madate = new Date();
+					DateFormat shortDateFormat = DateFormat.getDateTimeInstance(
+							DateFormat.SHORT,
+							DateFormat.SHORT, new Locale("FR","fr"));
+					String dateEnvoie = shortDateFormat.format(madate);
 					historique.add(dateEnvoie +" : "+request);
-					out.println(dateEnvoie +" MOI : "+request);
 
 					if (request.startsWith("/cmd"))
 					{
-						out.println(" /liste : affiche les utilisateurs connecté");
+						out.println(" /liste : affiche les utilisateurs connectés");
 						out.println(" /historique : affiche tous vos messages envoyés");
 						out.println(" /join utilisateur : vous connecte à un utilisateur");
 						out.println(" /quit : quitte l'application ");
-						out.println(" /logout : quitte le channel privé");
+						out.println(" /logout : quitte le chanel privé");
 					}
 					else if (request.startsWith("/liste"))
 					{
@@ -82,23 +89,25 @@ public class TCPThread extends Thread {
 					}
 					else if (request.startsWith("/historique"))
 					{
-						out.println("Historique des messages :");
+						out.println("Historique des messages envoyés :");
 						for (String msg : historique)
 						{
-							out.println(msg);
+							out.println("----- "+msg+" -----");
 						}
 					}
-					else if (tcpth == null && request.startsWith("/join"))
+					else if (request.startsWith("/join"))
 					{
 						System.out.println("requete envoyée " +request);
-						String date = LocalDateTime.now().toString();
+						//String date = LocalDateTime.now().toString();
+						Calendar calendar = Calendar.getInstance(); 
 						String utilisateurCible = request.substring(6);
 						System.out.println("Connexion de "+ this.utilisateur +" vers "+utilisateurCible);
 						boolean utilisateurTrouve = false;
 						
 						for (TCPThread tcpth : TCPServerSocket.vector)
 						{
-							if (tcpth.utilisateur.equals(utilisateurCible))
+						
+						 if (tcpth.utilisateur.equals(utilisateurCible))
 							{
 								utilisateurTrouve = true;
 								
@@ -108,6 +117,7 @@ public class TCPThread extends Thread {
 									 if(!TCPServerSocket.map.get(tcpth.utilisateur).equals(this.utilisateur)) {
 										//occupé
 										out.println("Votre correspondant n'est pas disponible pour le moment.");
+										tcpth.out.println(this.utilisateur+" à essayé de se connecter avec vous !");
 									 }else {
 										out.println("Vous êtes déjà connecté avec "+tcpth.utilisateur);
 									 }
@@ -178,12 +188,13 @@ public class TCPThread extends Thread {
 								toDelete = tcpth;
 						}
 						TCPServerSocket.vector.remove(toDelete);
+						isloggedin = false;
 						break;
 					}
 					else 
 					{
-						//discution
-						//Si tu parle avec une personne 
+						//discussion
+						//Si tu parles avec une personne 
 						if(TCPServerSocket.map.containsValue(this.utilisateur)) {
 							for (TCPThread tcpth : TCPServerSocket.vector)
 							{
@@ -221,14 +232,14 @@ public class TCPThread extends Thread {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		}
 	}
 
 
 
 
 
-	public void setTcpth(TCPThread tcpth) {
-		this.tcpth = tcpth;
-	} 
+
 }
 
