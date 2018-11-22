@@ -59,8 +59,7 @@ public class TCPThread extends Thread {
 			PrintWriter outToClient;
 
 			outToClient = new PrintWriter(new BufferedWriter(new OutputStreamWriter(connectionSocket.getOutputStream())), true);
-			do 
-			{
+			
 				request = "";
 				try {
 					request = in.readLine();
@@ -163,33 +162,13 @@ public class TCPThread extends Thread {
 					}
 					else if(request.startsWith("/quit"))
 					{
-						if(TCPServerSocket.map.containsValue(this.utilisateur)) {
-							this.out.println("Déconnecté de "+TCPServerSocket.map.get(this.utilisateur));
-							for (TCPThread tcpth : TCPServerSocket.vector)
-							{
-								if(tcpth.utilisateur.equals(TCPServerSocket.map.get(this.utilisateur)))
-								{
-									tcpth.out.println("/logoutTo "+this.utilisateur);
-									break;
-								}
-							}
-							TCPServerSocket.map.remove(TCPServerSocket.map.get(this.utilisateur));
-							TCPServerSocket.map.remove(this.utilisateur);
-						}
 						for (TCPThread tcpth : TCPServerSocket.vector)
 						{
-							tcpth.out.println("/hasLeave "+this.utilisateur);
+							tcpth.out.println(this.utilisateur+" viens de s'en aller du serveur !");
 						}
-						// Couper les liaisons Thread et TCP
-						TCPThread toDelete = null;
-						for (TCPThread tcpth : TCPServerSocket.vector)
-						{
-							if(tcpth.utilisateur.equals(this.utilisateur))
-								toDelete = tcpth;
-						}
-						TCPServerSocket.vector.remove(toDelete);
+						TCPServerSocket.vector.remove(this);
 						isloggedin = false;
-						break;
+
 					}
 					else 
 					{
@@ -219,21 +198,17 @@ public class TCPThread extends Thread {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			}while (true);
-
+			
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		try {
-			connectionSocket.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		
 		}
+		
+		
 	}
 
 

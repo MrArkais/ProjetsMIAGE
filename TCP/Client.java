@@ -24,7 +24,7 @@ public class Client  {
 		DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		Date date = new Date();
 		ArrayList<String> historique = new ArrayList<String> ();
-
+		boolean connecte = true;
 		
 		try  {
 			
@@ -53,12 +53,13 @@ public class Client  {
 	
 			System.out.println("Veuillez rentrer /cmd pour obtenir la liste des commandes ");
 
+
 			// sendMessage thread 
 			Thread sendMessage = new Thread(new Runnable() 
 			{ 
 				@Override
 				public synchronized void run() { 
-					while (true) { 
+					while (connecte) { 
 						try {
 							String request;
 							request = inFromUser.readLine();
@@ -86,7 +87,7 @@ public class Client  {
 				@Override
 				public synchronized void run() { 
 
-					while (true) { 
+					while (connecte) { 
 						try { 
 							// read the message sent to this client 
 							// Lecture des données arrivant du serveur
@@ -115,7 +116,7 @@ public class Client  {
 							}
 							else if(!answer.equals("") || !answer.equals(null) )
 							{
-								String dateReception = LocalDateTime.now().toString();
+								//String dateReception = LocalDateTime.now().toString();
 								System.out.println(answer);
 								historique.add(answer);
 
@@ -139,4 +140,6 @@ public class Client  {
 	
 	
 	}
+
+	
 }
