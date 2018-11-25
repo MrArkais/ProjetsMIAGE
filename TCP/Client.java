@@ -7,11 +7,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.Thread;
 import java.net.Socket;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Scanner;
 
 public class Client  {
@@ -21,8 +17,6 @@ public class Client  {
 	public static void main(String argv[]) throws Exception 
 	{
 		String as;
-		DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-		Date date = new Date();
 		ArrayList<String> historique = new ArrayList<String> ();
 		boolean connecte = true;
 		

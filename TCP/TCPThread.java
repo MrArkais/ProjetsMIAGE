@@ -1,16 +1,10 @@
 package TCP;
 import java.io.BufferedReader;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.text.DateFormat;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -21,7 +15,6 @@ import java.util.Locale;
 permettre de modifier le comportement des autres threads*/
 
 public class TCPThread extends Thread {
-	private Socket connectionSocket ;
 	private String utilisateur; 
 	final BufferedReader in; 
 	final PrintWriter out;  
@@ -31,7 +24,6 @@ public class TCPThread extends Thread {
 
 	public TCPThread(Socket connectionSocket, String name, BufferedReader in, PrintWriter out) {
 		super();
-		this.connectionSocket = connectionSocket;
 		this.utilisateur = name;
 		this.in = in;
 		this.out = out;
@@ -53,14 +45,7 @@ public class TCPThread extends Thread {
 		
 		String request;
 		try {
-			// Création du flux en entrée attache a la socket
-			BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-			// Création du flux en sortie attache a la socket
-			PrintWriter outToClient;
-
-			outToClient = new PrintWriter(new BufferedWriter(new OutputStreamWriter(connectionSocket.getOutputStream())), true);
-			
-				request = "";
+			request = "";
 				try {
 					request = in.readLine();
 					Date madate = new Date();
@@ -97,8 +82,6 @@ public class TCPThread extends Thread {
 					else if (request.startsWith("/join"))
 					{
 						System.out.println("requete envoyée " +request);
-						//String date = LocalDateTime.now().toString();
-						Calendar calendar = Calendar.getInstance(); 
 						String utilisateurCible = request.substring(6);
 						System.out.println("Connexion de "+ this.utilisateur +" vers "+utilisateurCible);
 						boolean utilisateurTrouve = false;
@@ -106,6 +89,7 @@ public class TCPThread extends Thread {
 						for (TCPThread tcpth : TCPServerSocket.vector)
 						{
 						
+							
 						 if (tcpth.utilisateur.equals(utilisateurCible))
 							{
 								utilisateurTrouve = true;
@@ -121,7 +105,7 @@ public class TCPThread extends Thread {
 										out.println("Vous êtes déjà connecté avec "+tcpth.utilisateur);
 									 }
 								}
-								else if(!TCPServerSocket.map.containsValue(tcpth.utilisateur))
+								else if(!TCPServerSocket.map.containsValue(tcpth.utilisateur) && tcpth.utilisateur != this.utilisateur)
 								{
 									//si pas en conv avec moi meme
 									//Ajout dans mon dictionnaire (pour salon privé) de moi et mon thread partenaire
@@ -131,11 +115,23 @@ public class TCPThread extends Thread {
 									tcpth.out.println("/connectTo "+this.utilisateur);
 									this.out.println("Connecté avec "+tcpth.utilisateur);
 								}
+								
+								else if (!TCPServerSocket.map.containsValue(this.utilisateur) && this.utilisateur == tcpth.utilisateur)
+								{
+									utilisateurTrouve = true;
+									out.println("Impossible de se connecter avec vous même");
+								}
+							
 								else 
 								{
 									this.out.println("Un problème est survenu !");
 								}
 							}
+							
+							
+						 
+						 
+						 
 						}
 						if(!utilisateurTrouve) {
 							this.out.println("Aucun utilisateur de ce nom ! /liste pour obtenir les utilisateurs connectés.");
@@ -162,6 +158,23 @@ public class TCPThread extends Thread {
 					}
 					else if(request.startsWith("/quit"))
 					{
+						//Fonction pour quitter la conversation privée 
+						if(TCPServerSocket.map.containsValue(this.utilisateur)) {
+							this.out.println("Déconnecté de "+TCPServerSocket.map.get(this.utilisateur));
+							for (TCPThread tcpth : TCPServerSocket.vector)
+							{
+								if(tcpth.utilisateur.equals(TCPServerSocket.map.get(this.utilisateur)))
+								{
+									tcpth.out.println("/logoutTo "+this.utilisateur);
+									break;
+								}
+							}
+							
+						}
+							TCPServerSocket.map.remove(TCPServerSocket.map.get(this.utilisateur));
+							TCPServerSocket.map.remove(this.utilisateur);
+						
+							// maintenant on quitte
 						for (TCPThread tcpth : TCPServerSocket.vector)
 						{
 							tcpth.out.println(this.utilisateur+" viens de s'en aller du serveur !");
@@ -172,7 +185,7 @@ public class TCPThread extends Thread {
 					}
 					else 
 					{
-						//discussion
+						//discution
 						//Si tu parles avec une personne 
 						if(TCPServerSocket.map.containsValue(this.utilisateur)) {
 							for (TCPThread tcpth : TCPServerSocket.vector)
