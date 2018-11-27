@@ -43,8 +43,8 @@ class TCPServerSocket {
 				vector.add(mtch); 
 
 				// démarrage thread
-
 				t.start(); 
+				
 			}catch (Exception e) {
 				// TODO Auto-generated catch block
 				System.out.println("Une erreur est survenu avec un client !"); 
