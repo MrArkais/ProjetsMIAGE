@@ -1,0 +1,4 @@
+Pour démarrer le projet correctement , il faut :
+- Passer l'encodage du projet en "UTF-8"
+
+Pour faire quitter un client , utilisez de préférence la commande /quit , pour ne pas lever d'exception sur le serveur. 
