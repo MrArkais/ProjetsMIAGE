@@ -12,37 +12,38 @@ class TCPServerSocket {
 
 	public static void main(String argv[]) throws Exception {
 		String request;
-		// CrÈation de la socket d'accueil au port 8080
+		// Cr√©ation de la socket d'accueil au port 8080
 		ServerSocket welcomeSocket = new ServerSocket(8080);
 		while (true) {
 			try {
 				// Attente d'une demande de connexion sur la socket d'accueil
 				Socket connectionSocket = welcomeSocket.accept();
 
-				//DÈmarrer la connexion avec le client , dans la classe TCPThread qui permet de
-				//faire plusieurs connexions ‡ la fois
+				//D√©marrer la connexion avec le client , dans la classe TCPThread qui permet de
+				//faire plusieurs connexions √† la fois
 
-				System.out.println("Nouvelle requete de connexion reÁue : " + connectionSocket);
+				System.out.println("Nouvelle requete de connexion re√ßue : " + connectionSocket);
 
-				// CrÈation du flux en sortie
+				// Cr√©ation du flux en sortie
 				PrintWriter outToServer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(connectionSocket.getOutputStream())),true);
 
-				//CrÈation du flux en entrÈe
+				//Cr√©ation du flux en entr√©e
 				BufferedReader inFromServer = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
 
 				System.out.println("Connexion du client...");
 				String utilisateur = inFromServer.readLine();
 				// Creation nouveau objet de type TCPThread pour ce client.
 				TCPThread mtch = new TCPThread(connectionSocket, utilisateur, inFromServer, outToServer);
-				// Creation de t, un Thread pour le dÈmarrage. 
+				// Creation de t, un Thread pour le d√©marrage. 
 				Thread t = new Thread(mtch); 
 
-				System.out.println("Ajout du client ‡ la liste"); 
+				System.out.println("Ajout du client √† la liste"); 
 
-				// add this client to active clients list 
+				// ajout de l'utilisateur dans la liste 
 				vector.add(mtch); 
 
-				// start the thread. 
+				// d√©marrage thread
+
 				t.start(); 
 			}catch (Exception e) {
 				// TODO Auto-generated catch block
